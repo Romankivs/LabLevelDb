@@ -7,7 +7,6 @@
 
 using json = nlohmann::json;
 
-// Create a product record in the database
 void create_product(leveldb::DB* db) {
     std::string name, category;
     double price;
@@ -22,7 +21,6 @@ void create_product(leveldb::DB* db) {
     fmt::print("Enter product stock: ");
     std::cin >> stock;
 
-    // Create JSON object
     json product_json = {
         {"name", name},
         {"category", category},
@@ -35,7 +33,6 @@ void create_product(leveldb::DB* db) {
     fmt::print("Product '{}' added.\n", name);
 }
 
-// Create a customer record in the database
 void create_customer(leveldb::DB* db) {
     std::string name, email;
 
@@ -44,12 +41,11 @@ void create_customer(leveldb::DB* db) {
     fmt::print("Enter customer email: ");
     std::cin >> email;
 
-    // Create JSON object
     json customer_json = {
         {"name", name},
         {"email", email},
-        {"total_spent", 0.0}, // Initialize total spent
-        {"orders", json::array()} // Initialize an empty array for orders
+        {"total_spent", 0.0},
+        {"orders", json::array()}
     };
 
     std::string key = "Customer:" + email;
@@ -57,7 +53,6 @@ void create_customer(leveldb::DB* db) {
     fmt::print("Customer '{}' added.\n", name);
 }
 
-// Create an order record in the database and add it to the customer's record
 void create_order(leveldb::DB* db) {
     std::string order_code, customer_email;
     fmt::print("Enter order code: ");
@@ -67,7 +62,7 @@ void create_order(leveldb::DB* db) {
 
     // Check if customer exists
     std::string customer_temp;
-    if (!db->Get(leveldb::ReadOptions(), customer_email, &customer_temp).ok()) {
+    if (!db->Get(leveldb::ReadOptions(), "Customer:" + customer_email, &customer_temp).ok()) {
         fmt::print("Error: Customer '{}' not found. Order creation aborted.\n", customer_email);
         return;
     }
@@ -251,12 +246,10 @@ void select_order(leveldb::DB* db) {
     }
 }
 
-// List entities based on type
 void list_entities(leveldb::DB* db, const std::string& type) {
-    json entities = json::array(); // Create a JSON array to hold the entities
+    json entities = json::array();
     leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
 
-    // Use a smart pointer to automatically manage the iterator's lifecycle
     std::unique_ptr<leveldb::Iterator> iterator(it);
 
     for (iterator->Seek(type + ":"); iterator->Valid() && iterator->key().ToString().rfind(type + ":", 0) == 0; iterator->Next()) {
